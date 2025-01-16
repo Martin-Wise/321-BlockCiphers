@@ -15,6 +15,8 @@ def ECB(plaintext):
 # CBC Melika
 def CBC(plaintext):
     print("temp")
+    aes_key = get_random_bytes(16)
+    cipher = AES.new(aes_key, AES.MODE_CTR)
 
 
 
@@ -27,6 +29,8 @@ def task1():
         plaintext = plaintext[54:]
         print(plaintext)
         print(header)
+
+        # add padding 
         
         #encrypt the plaintext
         cyphertext1 = ECB(plaintext)
