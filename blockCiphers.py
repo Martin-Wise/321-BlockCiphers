@@ -17,6 +17,8 @@ def ECB(plaintext, key):
 # CBC Melika
 def CBC(plaintext, key, iv):
     print("temp")
+    aes_key = get_random_bytes(16)
+    cipher = AES.new(aes_key, AES.MODE_CTR)
 
 def add_padding(plaintext : bytes, blocksize=16):
     byte_length = len(plaintext)
