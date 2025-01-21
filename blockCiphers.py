@@ -23,8 +23,8 @@ def CBC(plaintext, key, iv):
     ciphertext: bytes = b''
     prev_block = iv
 
-    for index in range(16, len(plaintext), 16):
-        block = plaintext[index-16:index]
+    for index in range(0, len(plaintext), 16):
+        block = plaintext[index:index+16]
         # XOR the block with the previous ciphertext block 
         xored_block = bytes([b1 ^ b2 for b1, b2 in zip(block, prev_block)]) 
         encrypted_block = cipher.encrypt(xored_block)
@@ -38,6 +38,10 @@ def add_padding(plaintext : bytes, blocksize=16):
     byte_length = len(plaintext)
     pad_number = blocksize - byte_length % blocksize
     return plaintext + bytes([pad_number]) * pad_number 
+
+def rem_padding(plaintext : bytes, blocksize=16):
+    pad_number = plaintext[-1]
+    return plaintext[:-pad_number]
 
 def task1():
     
@@ -74,29 +78,36 @@ def submit(userStr: str, key, iv):
     # URL encode ; & = (anything but alphanumerics)
 
     url_encode = urllib.parse.quote(userStr, safe="")
-    full_str = prefix + url_encode + suffix
+    full_str= prefix + url_encode + suffix
     padded_str = add_padding(full_str.encode('utf-8'), 16)
-
+   
     ciphertext = CBC(padded_str, key, iv)
     return ciphertext
 
 def verify(ciphertext, key, iv):
     cipher = AES.new(key, AES.MODE_CBC, iv)
-    decrypted = cipher.decrypt(ciphertext)
-
-    # remove padding
-    # pad_number = decrypted[-1]
-    # if pad_number < 1 or pad_number > 16:
-    #     raise ValueError("Invalid padding detected.")
-    # plaintext = decrypted_padded[:-pad_number]
-
+    decrypted = rem_padding(cipher.decrypt(ciphertext), 16)
+    
     # check if the string contains ";admin=true;"
     return b";admin=true;" in decrypted 
 
-# Simulate user input and encryption
-user_input = "Hello, world!"
-ciphertext = submit(user_input, key, iv)
+def task2():
 
-# Verify the ciphertext
-is_admin = verify(ciphertext, key, iv)
-print(is_admin)  # should print False
+    # Simulate user input and encryption
+    user_input = "hello_world_0admin0true"
+    ciphertext = submit(user_input, key, iv)
+
+    ciphertext_array = bytearray(ciphertext)
+   
+    xor_semicol = ord('0') ^ ord(';')
+    ciphertext_array[16] ^= xor_semicol
+
+    xor_equal = ord('0') ^ ord('=')
+    ciphertext_array[22] ^= xor_equal
+
+    ciphertext = bytes(ciphertext_array)
+    # Verify the ciphertext
+    is_admin = verify(ciphertext, key, iv)
+    print(is_admin)  # should print False
+
+# task2()
