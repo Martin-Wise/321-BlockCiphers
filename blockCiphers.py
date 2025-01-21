@@ -1,8 +1,11 @@
 #pip install pycyptodome
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
+import urllib.parse
 
-
+#create key and iv
+key = get_random_bytes(16)
+iv = get_random_bytes(16)
 # ECB Mardy
 def ECB(plaintext, key):
     cipher = AES.new(key, AES.MODE_ECB)
@@ -48,11 +51,6 @@ def task1():
         #add padding to make the plaintext in 16 byte blocks
         plaintext = add_padding(plaintext, blocksize=16)
 
-
-        #create key and iv
-        key = get_random_bytes(16)
-        iv = get_random_bytes(16)
-
         #encrypt the plaintext
         ciphertext1 = ECB(plaintext, key)
         ciphertext2 = CBC(plaintext, key, iv)
@@ -68,5 +66,37 @@ def task1():
         with open("mustangCBC.bmp", "wb") as cipherfile2:
             cipherfile2.write(cipherfile2raw)
 
-task1()
-        
+# task1()
+
+def submit(userStr: str, key, iv):
+    prefix = "userid=456;userdata="
+    suffix = ";session-id=31337"
+    # URL encode ; & = (anything but alphanumerics)
+
+    url_encode = urllib.parse.quote(userStr, safe="")
+    full_str = prefix + url_encode + suffix
+    padded_str = add_padding(full_str.encode('utf-8'), 16)
+
+    ciphertext = CBC(padded_str, key, iv)
+    return ciphertext
+
+def verify(ciphertext, key, iv):
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    decrypted = cipher.decrypt(ciphertext)
+
+    # remove padding
+    # pad_number = decrypted[-1]
+    # if pad_number < 1 or pad_number > 16:
+    #     raise ValueError("Invalid padding detected.")
+    # plaintext = decrypted_padded[:-pad_number]
+
+    # check if the string contains ";admin=true;"
+    return b";admin=true;" in decrypted 
+
+# Simulate user input and encryption
+user_input = "Hello, world!"
+ciphertext = submit(user_input, key, iv)
+
+# Verify the ciphertext
+is_admin = verify(ciphertext, key, iv)
+print(is_admin)  # should print False
